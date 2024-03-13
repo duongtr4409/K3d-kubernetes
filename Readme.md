@@ -33,19 +33,21 @@ sudo usermod -aG docker {{username}}
 
 ## Cài đặt kubectl, kubeadm, kubelet
 
-link: có thể cài đặt theo hướng dẫn ở link này: https://phoenixnap.com/kb/install-kubernetes-on-ubuntu
+link: có thể cài đặt theo hướng dẫn ở link này: https://www.linuxtechi.com/install-kubernetes-on-ubuntu-22-04/
 
 - Add Kubernetes Signing Key
 
 ```command
-curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 ```
 
 - Add Software Repositories
 
 ```command
-echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/kubernetes.gpg] http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+```
 
+```command
 sudo apt update
 ```
 
@@ -54,21 +56,33 @@ sudo apt update
 1. install command:
 
 ```command
-sudo apt install kubeadm kubelet kubectl
+sudo apt install -y kubelet kubeadm kubectl
 ```
 
 2. Mark the packages as held back to prevent automatic installation, upgrade, or removal:
 
 ```command
-sudo apt-mark hold kubeadm kubelet kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
 ```
 
-ps: nếu gặp vấn đề với kubelet chạy lệnh sau (kubelet không start được)
+ps: 
+- nếu gặp vấn đề với kubelet chạy lệnh sau (kubelet không start được)
 
 ```
 sudo swapoff -a
 
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+```
+- nếu lỗi 403 Forbidden ở bước 'Add Kubernetes Signing Key' thì cài đặt warp-cli
+```command
+# Add cloudflare gpg key
+curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+
+# Add this repo to your apt repositories
+echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+
+# Install
+sudo apt-get update && sudo apt-get install cloudflare-warp
 ```
 
 ## Cài đặt và sử dụng k3d tạo kubernetes cluster
